@@ -11,7 +11,7 @@ type Participant = {
 export default function UploadPage() {
   const [fileName, setFileName] = useState("");
   const [participants, setParticipants] = useState<Participant[]>([]);
-
+  const [searchTerm, setSearchTerm] = useState("");
   const handleFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
@@ -35,6 +35,13 @@ export default function UploadPage() {
       },
     });
   };
+  const filteredParticipants = participants.filter((person) => {
+    const name = person.Name.toLowerCase();
+    const email = person.Email.toLowerCase();
+    const search = searchTerm.toLowerCase();
+  
+    return name.includes(search) || email.includes(search);
+  });
 
   return (
     <main className="p-8">
@@ -68,6 +75,13 @@ export default function UploadPage() {
           <h2 className="mb-4 text-xl font-semibold">
             Katılımcılar ({participants.length})
           </h2>
+          <input
+  type="text"
+  placeholder="Katılımcı ara..."
+  value={searchTerm}
+  onChange={(event) => setSearchTerm(event.target.value)}
+  className="mb-4 w-full rounded-lg border border-gray-300 p-3 text-black"
+/>
 
           <div className="overflow-x-auto">
             <table className="w-full border-collapse border border-gray-300">
@@ -84,7 +98,7 @@ export default function UploadPage() {
               </thead>
 
               <tbody>
-                {participants.map((person, index) => (
+              {filteredParticipants.map((person, index) => (
                   <tr key={index}>
                     <td className="border border-gray-300 p-3">
                       {person.Name}
