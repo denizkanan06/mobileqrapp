@@ -8,6 +8,7 @@ export default function Navbar() {
       <Link href="/events">Etkinlikler</Link>
       <Link href="/participants">Katılımcılar</Link>
       <Link href="/check-in">QR Check-in</Link>
+      <Link href="/upload">CSV Yükle</Link>
     </nav>
   );
 }

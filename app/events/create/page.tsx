@@ -1,20 +1,31 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEventContext } from "@/context/EventContext";
 
 export default function CreateEventPage() {
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [location, setLocation] = useState("");
 
+  const { addEvent } = useEventContext();
+  const router = useRouter();
+
   const handleSubmit = () => {
-    console.log({
-      title,
+    if (!title.trim() || !date || !location.trim()) {
+      alert("Lütfen tüm alanları doldurun.");
+      return;
+    }
+
+    addEvent({
+      id: Date.now(),
+      title: title.trim(),
       date,
-      location,
+      location: location.trim(),
     });
 
-    alert("Etkinlik oluşturuldu!");
+    router.push("/events");
   };
 
   return (
@@ -32,7 +43,7 @@ export default function CreateEventPage() {
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full rounded border p-3 text-black"
+            className="w-full rounded border border-gray-300 bg-white p-3 text-black placeholder:text-gray-500"
             placeholder="Örn. Teknoloji Zirvesi"
           />
         </div>
@@ -46,7 +57,7 @@ export default function CreateEventPage() {
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="w-full rounded border p-3 text-black"
+            className="w-full rounded border border-gray-300 bg-white p-3 text-black"
           />
         </div>
 
@@ -58,7 +69,7 @@ export default function CreateEventPage() {
           <input
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            className="w-full rounded border p-3 text-black"
+            className="w-full rounded border border-gray-300 bg-white p-3 text-black placeholder:text-gray-500"
             placeholder="İstanbul Kongre Merkezi"
           />
         </div>
