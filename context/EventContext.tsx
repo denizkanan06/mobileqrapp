@@ -6,6 +6,7 @@ import {
   useEffect,
   useState,
 } from "react";
+
 import type { Event } from "@/types/event";
 
 type EventContextType = {
@@ -13,6 +14,10 @@ type EventContextType = {
   addEvent: (event: Event) => void;
   deleteEvent: (id: number) => void;
   updateEvent: (event: Event) => void;
+  addParticipantsToEvent: (
+    eventId: number,
+    participants: Event["participants"]
+  ) => void;
 };
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
@@ -29,7 +34,18 @@ export function EventProvider({
     const savedEvents = localStorage.getItem("events");
 
     if (savedEvents) {
-      setEvents(JSON.parse(savedEvents));
+      try {
+        const parsedEvents = JSON.parse(savedEvents) as Event[];
+
+        const normalizedEvents = parsedEvents.map((event) => ({
+          ...event,
+          participants: event.participants ?? [],
+        }));
+
+        setEvents(normalizedEvents);
+      } catch (error) {
+        console.error("Etkinlik verileri okunamadı:", error);
+      }
     }
 
     setLoaded(true);
@@ -42,19 +58,35 @@ export function EventProvider({
   }, [events, loaded]);
 
   const addEvent = (event: Event) => {
-    setEvents((prev) => [...prev, event]);
+    setEvents((previousEvents) => [...previousEvents, event]);
   };
 
   const deleteEvent = (id: number) => {
-    setEvents((prev) =>
-      prev.filter((event) => event.id !== id)
+    setEvents((previousEvents) =>
+      previousEvents.filter((event) => event.id !== id)
     );
   };
 
   const updateEvent = (updatedEvent: Event) => {
-    setEvents((prev) =>
-      prev.map((event) =>
+    setEvents((previousEvents) =>
+      previousEvents.map((event) =>
         event.id === updatedEvent.id ? updatedEvent : event
+      )
+    );
+  };
+
+  const addParticipantsToEvent = (
+    eventId: number,
+    participants: Event["participants"]
+  ) => {
+    setEvents((previousEvents) =>
+      previousEvents.map((event) =>
+        event.id === eventId
+          ? {
+              ...event,
+              participants,
+            }
+          : event
       )
     );
   };
@@ -66,6 +98,7 @@ export function EventProvider({
         addEvent,
         deleteEvent,
         updateEvent,
+        addParticipantsToEvent,
       }}
     >
       {children}

@@ -28,7 +28,7 @@ export default function EventCard({
 
       <div className="mt-6 flex flex-wrap gap-3">
         <Link
-          href="/upload"
+          href={`/events/${event.id}/upload`}
           className="rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700"
         >
           Katılımcıları Yönet
