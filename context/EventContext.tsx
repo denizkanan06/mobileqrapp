@@ -6,13 +6,7 @@ import {
   useEffect,
   useState,
 } from "react";
-
-export type Event = {
-  id: number;
-  title: string;
-  date: string;
-  location: string;
-};
+import type { Event } from "@/types/event";
 
 type EventContextType = {
   events: Event[];

@@ -23,6 +23,7 @@ export default function CreateEventPage() {
       title: title.trim(),
       date,
       location: location.trim(),
+      participants: [],
     });
 
     router.push("/events");

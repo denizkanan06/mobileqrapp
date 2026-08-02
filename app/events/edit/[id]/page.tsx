@@ -32,11 +32,11 @@ export default function EditEventPage() {
     e.preventDefault();
 
     updateEvent({
-      id: event.id,
-      title,
-      date,
-      location,
-    });
+        ...event,
+        title,
+        date,
+        location,
+      });
 
     router.push("/events");
   };
