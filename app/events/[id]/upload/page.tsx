@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import Papa from "papaparse";
 import { QRCodeSVG } from "qrcode.react";
+import QRCode from "qrcode";
 import { useEventContext } from "@/context/EventContext";
 import type { Participant } from "@/types/participant";
 
@@ -37,7 +38,33 @@ export default function EventUploadPage() {
   const [editingEmail, setEditingEmail] = useState("");
 
   const participants = event?.participants ?? [];
-
+  const handleDownloadQR = async (participant: Participant) => {
+    try {
+      const qrValue = `${eventId}:${participant.id}`;
+  
+      const dataUrl = await QRCode.toDataURL(qrValue, {
+        width: 500,
+        margin: 2,
+      });
+  
+      const safeName = participant.name
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "-");
+  
+      const link = document.createElement("a");
+  
+      link.href = dataUrl;
+      link.download = `${safeName}-qr.png`;
+  
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("QR kod indirilemedi:", error);
+      alert("QR kod indirilirken bir hata oluştu.");
+    }
+  };
   const handleAddParticipant = () => {
     const name = newName.trim();
     const email = newEmail.trim();
@@ -311,11 +338,21 @@ export default function EventUploadPage() {
                       </td>
 
                       <td className="border border-gray-300 p-3">
-                        <QRCodeSVG
-                          value={`${eventId}:${person.id}`}
-                          size={80}
-                        />
-                      </td>
+  <div className="flex flex-col items-start gap-2">
+    <QRCodeSVG
+      value={`${eventId}:${person.id}`}
+      size={80}
+    />
+
+    <button
+      type="button"
+      onClick={() => handleDownloadQR(person)}
+      className="rounded bg-purple-600 px-3 py-1 text-sm text-white hover:bg-purple-700"
+    >
+      QR İndir
+    </button>
+  </div>
+</td>
 
                       <td className="border border-gray-300 p-3">
                         <div className="flex flex-wrap gap-2">
