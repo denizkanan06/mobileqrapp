@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import Papa from "papaparse";
+import { QRCodeSVG } from "qrcode.react";
 import { useEventContext } from "@/context/EventContext";
 import type { Participant } from "@/types/participant";
 
@@ -15,7 +16,11 @@ export default function EventUploadPage() {
   const params = useParams();
   const eventId = Number(params.id);
 
-  const { events, addParticipantsToEvent } = useEventContext();
+  const {
+    events,
+    addParticipantsToEvent,
+    deleteParticipant,
+  } = useEventContext();
 
   const event = events.find((item) => item.id === eventId);
 
@@ -138,10 +143,19 @@ export default function EventUploadPage() {
                     Ad
                   </th>
                   <th className="border border-gray-300 p-3 text-left">
+                    QR Kod
+                  </th>
+
+                  <th className="border border-gray-300 p-3 text-left">
                     E-posta
                   </th>
+
                   <th className="border border-gray-300 p-3 text-left">
                     Durum
+                  </th>
+
+                  <th className="border border-gray-300 p-3 text-left">
+                    İşlem
                   </th>
                 </tr>
               </thead>
@@ -152,13 +166,43 @@ export default function EventUploadPage() {
                     <td className="border border-gray-300 p-3">
                       {person.name}
                     </td>
+
                     <td className="border border-gray-300 p-3">
                       {person.email}
                     </td>
+
                     <td className="border border-gray-300 p-3">
                       {person.checkedIn
                         ? "Giriş yaptı"
                         : "Bekleniyor"}
+                    </td>
+
+                    <td className="border border-gray-300 p-3">
+                      <QRCodeSVG
+                      value={'${eventId}:${person.id}'}
+                      size={80}
+                      />
+                    </td>
+
+                    <td className="border border-gray-300 p-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const confirmed = window.confirm(
+                            `${person.name} adlı katılımcıyı silmek istiyor musun?`
+                          );
+
+                          if (confirmed) {
+                            deleteParticipant(
+                              eventId,
+                              person.id
+                            );
+                          }
+                        }}
+                        className="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-700"
+                      >
+                        Sil
+                      </button>
                     </td>
                   </tr>
                 ))}

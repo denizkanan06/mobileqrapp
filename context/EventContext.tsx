@@ -14,13 +14,21 @@ type EventContextType = {
   addEvent: (event: Event) => void;
   deleteEvent: (id: number) => void;
   updateEvent: (event: Event) => void;
+
   addParticipantsToEvent: (
     eventId: number,
     participants: Event["participants"]
   ) => void;
+
+  deleteParticipant: (
+    eventId: number,
+    participantId: number
+  ) => void;
 };
 
-const EventContext = createContext<EventContextType | undefined>(undefined);
+const EventContext = createContext<EventContextType | undefined>(
+  undefined
+);
 
 export function EventProvider({
   children,
@@ -44,7 +52,10 @@ export function EventProvider({
 
         setEvents(normalizedEvents);
       } catch (error) {
-        console.error("Etkinlik verileri okunamadı:", error);
+        console.error(
+          "Etkinlik verileri okunamadı:",
+          error
+        );
       }
     }
 
@@ -53,24 +64,34 @@ export function EventProvider({
 
   useEffect(() => {
     if (loaded) {
-      localStorage.setItem("events", JSON.stringify(events));
+      localStorage.setItem(
+        "events",
+        JSON.stringify(events)
+      );
     }
   }, [events, loaded]);
 
   const addEvent = (event: Event) => {
-    setEvents((previousEvents) => [...previousEvents, event]);
+    setEvents((previousEvents) => [
+      ...previousEvents,
+      event,
+    ]);
   };
 
   const deleteEvent = (id: number) => {
     setEvents((previousEvents) =>
-      previousEvents.filter((event) => event.id !== id)
+      previousEvents.filter(
+        (event) => event.id !== id
+      )
     );
   };
 
   const updateEvent = (updatedEvent: Event) => {
     setEvents((previousEvents) =>
       previousEvents.map((event) =>
-        event.id === updatedEvent.id ? updatedEvent : event
+        event.id === updatedEvent.id
+          ? updatedEvent
+          : event
       )
     );
   };
@@ -91,6 +112,25 @@ export function EventProvider({
     );
   };
 
+  const deleteParticipant = (
+    eventId: number,
+    participantId: number
+  ) => {
+    setEvents((previousEvents) =>
+      previousEvents.map((event) =>
+        event.id === eventId
+          ? {
+              ...event,
+              participants: event.participants.filter(
+                (participant) =>
+                  participant.id !== participantId
+              ),
+            }
+          : event
+      )
+    );
+  };
+
   return (
     <EventContext.Provider
       value={{
@@ -99,6 +139,7 @@ export function EventProvider({
         deleteEvent,
         updateEvent,
         addParticipantsToEvent,
+        deleteParticipant,
       }}
     >
       {children}
