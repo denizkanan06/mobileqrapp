@@ -11,8 +11,11 @@ import type { Event } from "@/types/event";
 
 type EventContextType = {
   events: Event[];
+
   addEvent: (event: Event) => void;
+
   deleteEvent: (id: number) => void;
+
   updateEvent: (event: Event) => void;
 
   addParticipantsToEvent: (
@@ -21,6 +24,11 @@ type EventContextType = {
   ) => void;
 
   deleteParticipant: (
+    eventId: number,
+    participantId: number
+  ) => void;
+
+  checkInParticipant: (
     eventId: number,
     participantId: number
   ) => void;
@@ -131,6 +139,30 @@ export function EventProvider({
     );
   };
 
+  const checkInParticipant = (
+    eventId: number,
+    participantId: number
+  ) => {
+    setEvents((previousEvents) =>
+      previousEvents.map((event) =>
+        event.id === eventId
+          ? {
+              ...event,
+              participants: event.participants.map(
+                (participant) =>
+                  participant.id === participantId
+                    ? {
+                        ...participant,
+                        checkedIn: true,
+                      }
+                    : participant
+              ),
+            }
+          : event
+      )
+    );
+  };
+
   return (
     <EventContext.Provider
       value={{
@@ -140,6 +172,7 @@ export function EventProvider({
         updateEvent,
         addParticipantsToEvent,
         deleteParticipant,
+        checkInParticipant,
       }}
     >
       {children}

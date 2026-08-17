@@ -179,7 +179,7 @@ export default function EventUploadPage() {
 
                     <td className="border border-gray-300 p-3">
                       <QRCodeSVG
-                      value={'${eventId}:${person.id}'}
+                      value={`${eventId}:${person.id}`}
                       size={80}
                       />
                     </td>
