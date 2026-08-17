@@ -19,6 +19,8 @@ export default function EventUploadPage() {
   const {
     events,
     addParticipantsToEvent,
+    addParticipant,
+    updateParticipant,
     deleteParticipant,
   } = useEventContext();
 
@@ -27,7 +29,85 @@ export default function EventUploadPage() {
   const [fileName, setFileName] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
+  const [newName, setNewName] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingName, setEditingName] = useState("");
+  const [editingEmail, setEditingEmail] = useState("");
+
   const participants = event?.participants ?? [];
+
+  const handleAddParticipant = () => {
+    const name = newName.trim();
+    const email = newEmail.trim();
+
+    if (!name || !email) {
+      alert("Lütfen ad ve e-posta alanlarını doldurun.");
+      return;
+    }
+
+    const emailExists = participants.some(
+      (participant) =>
+        participant.email.toLowerCase() === email.toLowerCase()
+    );
+
+    if (emailExists) {
+      alert("Bu e-posta adresine sahip bir katılımcı zaten var.");
+      return;
+    }
+
+    addParticipant(eventId, {
+      id: Date.now(),
+      name,
+      email,
+      checkedIn: false,
+    });
+
+    setNewName("");
+    setNewEmail("");
+  };
+
+  const handleStartEdit = (participant: Participant) => {
+    setEditingId(participant.id);
+    setEditingName(participant.name);
+    setEditingEmail(participant.email);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditingName("");
+    setEditingEmail("");
+  };
+
+  const handleSaveEdit = (participant: Participant) => {
+    const name = editingName.trim();
+    const email = editingEmail.trim();
+
+    if (!name || !email) {
+      alert("Ad ve e-posta alanları boş bırakılamaz.");
+      return;
+    }
+
+    const emailExists = participants.some(
+      (person) =>
+        person.id !== participant.id &&
+        person.email.toLowerCase() === email.toLowerCase()
+    );
+
+    if (emailExists) {
+      alert("Bu e-posta adresine sahip başka bir katılımcı zaten var.");
+      return;
+    }
+
+    updateParticipant(eventId, {
+      ...participant,
+      name,
+      email,
+    });
+
+    handleCancelEdit();
+  };
 
   const handleFile = (
     uploadEvent: React.ChangeEvent<HTMLInputElement>
@@ -45,22 +125,20 @@ export default function EventUploadPage() {
       skipEmptyLines: true,
 
       complete: (results) => {
-        const parsedParticipants: Participant[] =
-          results.data.map((person, index) => ({
+        const parsedParticipants: Participant[] = results.data.map(
+          (person, index) => ({
             id: Date.now() + index,
             name: person.Name?.trim() ?? "",
             email: person.Email?.trim() ?? "",
             checkedIn: false,
-          }));
+          })
+        );
 
         const validParticipants = parsedParticipants.filter(
           (person) => person.name && person.email
         );
 
-        addParticipantsToEvent(
-          eventId,
-          validParticipants
-        );
+        addParticipantsToEvent(eventId, validParticipants);
       },
 
       error: (error) => {
@@ -69,16 +147,14 @@ export default function EventUploadPage() {
     });
   };
 
-  const filteredParticipants = participants.filter(
-    (person) => {
-      const search = searchTerm.toLowerCase();
+  const filteredParticipants = participants.filter((person) => {
+    const search = searchTerm.toLowerCase();
 
-      return (
-        person.name.toLowerCase().includes(search) ||
-        person.email.toLowerCase().includes(search)
-      );
-    }
-  );
+    return (
+      person.name.toLowerCase().includes(search) ||
+      person.email.toLowerCase().includes(search)
+    );
+  });
 
   if (!event) {
     return (
@@ -95,8 +171,41 @@ export default function EventUploadPage() {
       </h1>
 
       <p className="mt-2 text-gray-600">
-        CSV dosyasını bu etkinliğe yükleyebilirsin.
+        CSV dosyasını bu etkinliğe yükleyebilir veya manuel katılımcı
+        ekleyebilirsin.
       </p>
+
+      <div className="mt-6 rounded-xl bg-white p-6 shadow">
+        <h2 className="text-xl font-semibold text-black">
+          Manuel Katılımcı Ekle
+        </h2>
+
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <input
+            type="text"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="Ad Soyad"
+            className="rounded border border-gray-300 bg-white p-3 text-black placeholder:text-gray-500"
+          />
+
+          <input
+            type="email"
+            value={newEmail}
+            onChange={(e) => setNewEmail(e.target.value)}
+            placeholder="E-posta"
+            className="rounded border border-gray-300 bg-white p-3 text-black placeholder:text-gray-500"
+          />
+        </div>
+
+        <button
+          type="button"
+          onClick={handleAddParticipant}
+          className="mt-4 rounded-lg bg-green-600 px-5 py-3 font-semibold text-white hover:bg-green-700"
+        >
+          Katılımcı Ekle
+        </button>
+      </div>
 
       <input
         id="csv-file"
@@ -128,9 +237,7 @@ export default function EventUploadPage() {
           <input
             type="text"
             value={searchTerm}
-            onChange={(event) =>
-              setSearchTerm(event.target.value)
-            }
+            onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Katılımcı ara..."
             className="mb-4 w-full rounded border border-gray-300 bg-white p-3 text-black placeholder:text-gray-500"
           />
@@ -142,9 +249,6 @@ export default function EventUploadPage() {
                   <th className="border border-gray-300 p-3 text-left">
                     Ad
                   </th>
-                  <th className="border border-gray-300 p-3 text-left">
-                    QR Kod
-                  </th>
 
                   <th className="border border-gray-300 p-3 text-left">
                     E-posta
@@ -155,57 +259,119 @@ export default function EventUploadPage() {
                   </th>
 
                   <th className="border border-gray-300 p-3 text-left">
+                    QR Kod
+                  </th>
+
+                  <th className="border border-gray-300 p-3 text-left">
                     İşlem
                   </th>
                 </tr>
               </thead>
 
               <tbody>
-                {filteredParticipants.map((person) => (
-                  <tr key={person.id}>
-                    <td className="border border-gray-300 p-3">
-                      {person.name}
-                    </td>
+                {filteredParticipants.map((person) => {
+                  const isEditing = editingId === person.id;
 
-                    <td className="border border-gray-300 p-3">
-                      {person.email}
-                    </td>
+                  return (
+                    <tr key={person.id}>
+                      <td className="border border-gray-300 p-3">
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={editingName}
+                            onChange={(e) =>
+                              setEditingName(e.target.value)
+                            }
+                            className="w-full rounded border border-gray-300 bg-white p-2 text-black"
+                          />
+                        ) : (
+                          person.name
+                        )}
+                      </td>
 
-                    <td className="border border-gray-300 p-3">
-                      {person.checkedIn
-                        ? "Giriş yaptı"
-                        : "Bekleniyor"}
-                    </td>
+                      <td className="border border-gray-300 p-3">
+                        {isEditing ? (
+                          <input
+                            type="email"
+                            value={editingEmail}
+                            onChange={(e) =>
+                              setEditingEmail(e.target.value)
+                            }
+                            className="w-full rounded border border-gray-300 bg-white p-2 text-black"
+                          />
+                        ) : (
+                          person.email
+                        )}
+                      </td>
 
-                    <td className="border border-gray-300 p-3">
-                      <QRCodeSVG
-                      value={`${eventId}:${person.id}`}
-                      size={80}
-                      />
-                    </td>
+                      <td className="border border-gray-300 p-3">
+                        {person.checkedIn
+                          ? "Giriş yaptı"
+                          : "Bekleniyor"}
+                      </td>
 
-                    <td className="border border-gray-300 p-3">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const confirmed = window.confirm(
-                            `${person.name} adlı katılımcıyı silmek istiyor musun?`
-                          );
+                      <td className="border border-gray-300 p-3">
+                        <QRCodeSVG
+                          value={`${eventId}:${person.id}`}
+                          size={80}
+                        />
+                      </td>
 
-                          if (confirmed) {
-                            deleteParticipant(
-                              eventId,
-                              person.id
-                            );
-                          }
-                        }}
-                        className="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-700"
-                      >
-                        Sil
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      <td className="border border-gray-300 p-3">
+                        <div className="flex flex-wrap gap-2">
+                          {isEditing ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => handleSaveEdit(person)}
+                                className="rounded bg-green-600 px-3 py-1 text-white hover:bg-green-700"
+                              >
+                                Kaydet
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={handleCancelEdit}
+                                className="rounded bg-gray-500 px-3 py-1 text-white hover:bg-gray-600"
+                              >
+                                İptal
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => handleStartEdit(person)}
+                                className="rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-700"
+                              >
+                                Düzenle
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const confirmed = window.confirm(
+                                    `${person.name} adlı katılımcıyı silmek istiyor musun?`
+                                  );
+
+                                  if (confirmed) {
+                                    deleteParticipant(
+                                      eventId,
+                                      person.id
+                                    );
+                                  }
+                                }}
+                                className="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-700"
+                              >
+                                Sil
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

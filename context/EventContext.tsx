@@ -23,6 +23,11 @@ type EventContextType = {
     participants: Event["participants"]
   ) => void;
 
+  addParticipant: (
+    eventId: number,
+    participant: Event["participants"][number]
+  ) => void;
+
   deleteParticipant: (
     eventId: number,
     participantId: number
@@ -32,6 +37,11 @@ type EventContextType = {
     eventId: number,
     participantId: number
   ) => void;
+
+  updateParticipant: (
+  eventId: number,
+  participant: Event["participants"][number]
+) => void;
 };
 
 const EventContext = createContext<EventContextType | undefined>(
@@ -120,6 +130,25 @@ export function EventProvider({
     );
   };
 
+  const addParticipant = (
+    eventId: number,
+    participant: Event["participants"][number]
+  ) => {
+    setEvents((previousEvents) =>
+      previousEvents.map((event) =>
+        event.id === eventId
+          ? {
+              ...event,
+              participants: [
+                ...event.participants,
+                participant,
+              ],
+            }
+          : event
+      )
+    );
+  };
+
   const deleteParticipant = (
     eventId: number,
     participantId: number
@@ -132,6 +161,27 @@ export function EventProvider({
               participants: event.participants.filter(
                 (participant) =>
                   participant.id !== participantId
+              ),
+            }
+          : event
+      )
+    );
+  };
+
+  const updateParticipant = (
+    eventId: number,
+    updatedParticipant: Event["participants"][number]
+  ) => {
+    setEvents((previousEvents) =>
+      previousEvents.map((event) =>
+        event.id === eventId
+          ? {
+              ...event,
+              participants: event.participants.map(
+                (participant) =>
+                  participant.id === updatedParticipant.id
+                    ? updatedParticipant
+                    : participant
               ),
             }
           : event
@@ -171,6 +221,8 @@ export function EventProvider({
         deleteEvent,
         updateEvent,
         addParticipantsToEvent,
+        addParticipant,
+        updateParticipant,
         deleteParticipant,
         checkInParticipant,
       }}
