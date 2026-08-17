@@ -52,6 +52,62 @@ export default function DashboardPage() {
           </h2>
         </div>
 
+        <section className="mt-10">
+  <h2 className="text-2xl font-bold text-black">
+    Etkinlik Bazlı Özet
+  </h2>
+
+  {events.length === 0 ? (
+    <p className="mt-4 text-gray-600">
+      Henüz etkinlik bulunmuyor.
+    </p>
+  ) : (
+    <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {events.map((event) => {
+        const total = event.participants.length;
+
+        const checkedIn = event.participants.filter(
+          (participant) => participant.checkedIn
+        ).length;
+
+        const waiting = total - checkedIn;
+
+        const rate =
+          total > 0
+            ? Math.round((checkedIn / total) * 100)
+            : 0;
+
+        return (
+          <div
+            key={event.id}
+            className="rounded-xl bg-white p-6 shadow"
+          >
+            <h3 className="text-xl font-bold text-black">
+              {event.title}
+            </h3>
+
+            <p className="mt-4 text-gray-600">
+              Toplam Katılımcı: {total}
+            </p>
+
+            <p className="mt-2 text-green-600">
+              Check-in: {checkedIn}
+            </p>
+
+            <p className="mt-2 text-red-600">
+              Bekleyen: {waiting}
+            </p>
+
+            <p className="mt-2 font-semibold text-blue-600">
+              Check-in Oranı: %{rate}
+            </p>
+          </div>
+        );
+      })}
+    </div>
+  )}
+</section>
+
         <div className="rounded-xl bg-white p-6 shadow">
           <p className="text-gray-500">
             Toplam Katılımcı
