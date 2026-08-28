@@ -38,6 +38,18 @@ export default function EventUploadPage() {
   const [editingEmail, setEditingEmail] = useState("");
 
   const participants = event?.participants ?? [];
+  const checkedInCount = participants.filter(
+    (participant) => participant.checkedIn
+  ).length;
+  
+  const waitingCount = participants.length - checkedInCount;
+  
+  const attendanceRate =
+    participants.length > 0
+      ? Math.round(
+          (checkedInCount / participants.length) * 100
+        )
+      : 0;
 
   const handleDownloadQR = async (participant: Participant) => {
     try {
@@ -384,6 +396,48 @@ export default function EventUploadPage() {
 
       {participants.length > 0 && (
         <div className="mt-8">
+          {/* Etkinlik istatistikleri */}
+<div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+  <div className="rounded-xl bg-white p-5 shadow">
+    <p className="text-sm font-medium text-gray-500">
+      Toplam Katılımcı
+    </p>
+
+    <p className="mt-2 text-3xl font-bold text-gray-900">
+      {participants.length}
+    </p>
+  </div>
+
+  <div className="rounded-xl bg-white p-5 shadow">
+    <p className="text-sm font-medium text-gray-500">
+      Giriş Yapan
+    </p>
+
+    <p className="mt-2 text-3xl font-bold text-green-600">
+      {checkedInCount}
+    </p>
+  </div>
+
+  <div className="rounded-xl bg-white p-5 shadow">
+    <p className="text-sm font-medium text-gray-500">
+      Bekleyen
+    </p>
+
+    <p className="mt-2 text-3xl font-bold text-orange-500">
+      {waitingCount}
+    </p>
+  </div>
+
+  <div className="rounded-xl bg-white p-5 shadow">
+    <p className="text-sm font-medium text-gray-500">
+      Katılım Oranı
+    </p>
+
+    <p className="mt-2 text-3xl font-bold text-blue-600">
+      %{attendanceRate}
+    </p>
+  </div>
+</div>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-xl font-semibold">
               Katılımcılar ({participants.length})
