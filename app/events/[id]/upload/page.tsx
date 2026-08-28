@@ -91,27 +91,22 @@ export default function EventUploadPage() {
         return;
       }
 
-      // Arka plan
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Üst başlık
       ctx.fillStyle = "#111827";
       ctx.textAlign = "center";
       ctx.font = "bold 54px Arial";
       ctx.fillText(event.title, 500, 130);
 
-      // Bilet başlığı
       ctx.fillStyle = "#2563eb";
       ctx.font = "bold 32px Arial";
       ctx.fillText("ETKİNLİK GİRİŞ BİLETİ", 500, 200);
 
-      // Katılımcı adı
       ctx.fillStyle = "#111827";
       ctx.font = "bold 44px Arial";
       ctx.fillText(participant.name, 500, 310);
 
-      // E-posta
       ctx.fillStyle = "#6b7280";
       ctx.font = "28px Arial";
       ctx.fillText(participant.email, 500, 365);
@@ -119,20 +114,16 @@ export default function EventUploadPage() {
       const qrImage = new Image();
 
       qrImage.onload = () => {
-        // QR kod
         ctx.drawImage(qrImage, 250, 440, 500, 500);
 
-        // Tarih
         ctx.fillStyle = "#111827";
         ctx.font = "bold 30px Arial";
         ctx.fillText(event.date, 500, 1040);
 
-        // Konum
         ctx.fillStyle = "#4b5563";
         ctx.font = "28px Arial";
         ctx.fillText(event.location, 500, 1100);
 
-        // Alt açıklama
         ctx.fillStyle = "#6b7280";
         ctx.font = "24px Arial";
         ctx.fillText(
@@ -161,6 +152,44 @@ export default function EventUploadPage() {
       console.error("Bilet oluşturulamadı:", error);
       alert("Bilet oluşturulurken bir hata oluştu.");
     }
+  };
+
+  const handleDownloadReport = () => {
+    if (!event) {
+      return;
+    }
+
+    const reportData = participants.map((participant) => ({
+      "Ad Soyad": participant.name,
+      "E-posta": participant.email,
+      "Check-in Durumu": participant.checkedIn
+        ? "Giriş yaptı"
+        : "Bekleniyor",
+    }));
+
+    const csv = Papa.unparse(reportData);
+
+    const blob = new Blob(["\uFEFF" + csv], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    const safeEventName = event.title
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "-");
+
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `${safeEventName}-katilim-raporu.csv`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
   };
 
   const handleAddParticipant = () => {
@@ -265,10 +294,7 @@ export default function EventUploadPage() {
           (person) => person.name && person.email
         );
 
-        addParticipantsToEvent(
-          eventId,
-          validParticipants
-        );
+        addParticipantsToEvent(eventId, validParticipants);
       },
 
       error: (error) => {
@@ -277,16 +303,14 @@ export default function EventUploadPage() {
     });
   };
 
-  const filteredParticipants = participants.filter(
-    (person) => {
-      const search = searchTerm.toLowerCase();
+  const filteredParticipants = participants.filter((person) => {
+    const search = searchTerm.toLowerCase();
 
-      return (
-        person.name.toLowerCase().includes(search) ||
-        person.email.toLowerCase().includes(search)
-      );
-    }
-  );
+    return (
+      person.name.toLowerCase().includes(search) ||
+      person.email.toLowerCase().includes(search)
+    );
+  });
 
   if (!event) {
     return (
@@ -307,7 +331,6 @@ export default function EventUploadPage() {
         ekleyebilirsin.
       </p>
 
-      {/* Manuel katılımcı ekleme */}
       <div className="mt-6 rounded-xl bg-white p-6 shadow">
         <h2 className="text-xl font-semibold text-black">
           Manuel Katılımcı Ekle
@@ -340,7 +363,6 @@ export default function EventUploadPage() {
         </button>
       </div>
 
-      {/* CSV yükleme */}
       <input
         id="csv-file"
         type="file"
@@ -357,17 +379,24 @@ export default function EventUploadPage() {
       </label>
 
       {fileName && (
-        <p className="mt-4 text-green-600">
-          📄 {fileName}
-        </p>
+        <p className="mt-4 text-green-600">📄 {fileName}</p>
       )}
 
-      {/* Katılımcı tablosu */}
       {participants.length > 0 && (
         <div className="mt-8">
-          <h2 className="mb-4 text-xl font-semibold">
-            Katılımcılar ({participants.length})
-          </h2>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl font-semibold">
+              Katılımcılar ({participants.length})
+            </h2>
+
+            <button
+              type="button"
+              onClick={handleDownloadReport}
+              className="rounded-lg bg-emerald-600 px-4 py-2 font-semibold text-white hover:bg-emerald-700"
+            >
+              Katılım Raporunu İndir
+            </button>
+          </div>
 
           <input
             type="text"
@@ -405,21 +434,17 @@ export default function EventUploadPage() {
 
               <tbody>
                 {filteredParticipants.map((person) => {
-                  const isEditing =
-                    editingId === person.id;
+                  const isEditing = editingId === person.id;
 
                   return (
                     <tr key={person.id}>
-                      {/* Ad */}
                       <td className="border border-gray-300 p-3">
                         {isEditing ? (
                           <input
                             type="text"
                             value={editingName}
                             onChange={(e) =>
-                              setEditingName(
-                                e.target.value
-                              )
+                              setEditingName(e.target.value)
                             }
                             className="w-full rounded border border-gray-300 bg-white p-2 text-black"
                           />
@@ -428,16 +453,13 @@ export default function EventUploadPage() {
                         )}
                       </td>
 
-                      {/* E-posta */}
                       <td className="border border-gray-300 p-3">
                         {isEditing ? (
                           <input
                             type="email"
                             value={editingEmail}
                             onChange={(e) =>
-                              setEditingEmail(
-                                e.target.value
-                              )
+                              setEditingEmail(e.target.value)
                             }
                             className="w-full rounded border border-gray-300 bg-white p-2 text-black"
                           />
@@ -446,7 +468,6 @@ export default function EventUploadPage() {
                         )}
                       </td>
 
-                      {/* Durum */}
                       <td className="border border-gray-300 p-3">
                         {person.checkedIn ? (
                           <span className="font-medium text-green-600">
@@ -459,7 +480,6 @@ export default function EventUploadPage() {
                         )}
                       </td>
 
-                      {/* QR */}
                       <td className="border border-gray-300 p-3">
                         <div className="flex flex-col items-start gap-2">
                           <QRCodeSVG
@@ -469,9 +489,7 @@ export default function EventUploadPage() {
 
                           <button
                             type="button"
-                            onClick={() =>
-                              handleDownloadQR(person)
-                            }
+                            onClick={() => handleDownloadQR(person)}
                             className="rounded bg-purple-600 px-3 py-1 text-sm text-white hover:bg-purple-700"
                           >
                             QR İndir
@@ -479,16 +497,13 @@ export default function EventUploadPage() {
                         </div>
                       </td>
 
-                      {/* İşlemler */}
                       <td className="border border-gray-300 p-3">
                         <div className="flex flex-wrap gap-2">
                           {isEditing ? (
                             <>
                               <button
                                 type="button"
-                                onClick={() =>
-                                  handleSaveEdit(person)
-                                }
+                                onClick={() => handleSaveEdit(person)}
                                 className="rounded bg-green-600 px-3 py-1 text-white hover:bg-green-700"
                               >
                                 Kaydet
@@ -496,9 +511,7 @@ export default function EventUploadPage() {
 
                               <button
                                 type="button"
-                                onClick={
-                                  handleCancelEdit
-                                }
+                                onClick={handleCancelEdit}
                                 className="rounded bg-gray-500 px-3 py-1 text-white hover:bg-gray-600"
                               >
                                 İptal
@@ -508,11 +521,7 @@ export default function EventUploadPage() {
                             <>
                               <button
                                 type="button"
-                                onClick={() =>
-                                  handleStartEdit(
-                                    person
-                                  )
-                                }
+                                onClick={() => handleStartEdit(person)}
                                 className="rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-700"
                               >
                                 Düzenle
@@ -520,11 +529,7 @@ export default function EventUploadPage() {
 
                               <button
                                 type="button"
-                                onClick={() =>
-                                  handleDownloadTicket(
-                                    person
-                                  )
-                                }
+                                onClick={() => handleDownloadTicket(person)}
                                 className="rounded bg-purple-600 px-3 py-1 text-white hover:bg-purple-700"
                               >
                                 Bilet İndir
@@ -533,10 +538,9 @@ export default function EventUploadPage() {
                               <button
                                 type="button"
                                 onClick={() => {
-                                  const confirmed =
-                                    window.confirm(
-                                      `${person.name} adlı katılımcıyı silmek istiyor musun?`
-                                    );
+                                  const confirmed = window.confirm(
+                                    `${person.name} adlı katılımcıyı silmek istiyor musun?`
+                                  );
 
                                   if (confirmed) {
                                     deleteParticipant(
