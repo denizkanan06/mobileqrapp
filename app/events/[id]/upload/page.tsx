@@ -7,6 +7,7 @@ import { QRCodeSVG } from "qrcode.react";
 import QRCode from "qrcode";
 import { useEventContext } from "@/context/EventContext";
 import type { Participant } from "@/types/participant";
+import JSZip from "jszip";
 
 type CsvParticipant = {
   Name: string;
@@ -171,22 +172,132 @@ export default function EventUploadPage() {
     }
   
     const confirmed = window.confirm(
-      `${participants.length} katılımcının tüm biletleri indirilecek. Devam etmek istiyor musun?`
+      `${participants.length} katılımcının tüm biletleri tek ZIP dosyası olarak indirilecek. Devam etmek istiyor musun?`
     );
   
     if (!confirmed) {
       return;
     }
   
-    for (const participant of participants) {
-      await handleDownloadTicket(participant);
+    try {
+      const zip = new JSZip();
   
-      await new Promise((resolve) =>
-        setTimeout(resolve, 400)
-      );
+      for (const participant of participants) {
+        const qrValue = `${eventId}:${participant.id}`;
+  
+        const qrDataUrl = await QRCode.toDataURL(qrValue, {
+          width: 500,
+          margin: 2,
+        });
+  
+        const canvas = document.createElement("canvas");
+  
+        canvas.width = 1000;
+        canvas.height = 1400;
+  
+        const ctx = canvas.getContext("2d");
+  
+        if (!ctx) {
+          continue;
+        }
+  
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+        ctx.fillStyle = "#111827";
+        ctx.textAlign = "center";
+        ctx.font = "bold 54px Arial";
+        ctx.fillText(event.title, 500, 130);
+  
+        ctx.fillStyle = "#2563eb";
+        ctx.font = "bold 32px Arial";
+        ctx.fillText("ETKİNLİK GİRİŞ BİLETİ", 500, 200);
+  
+        ctx.fillStyle = "#111827";
+        ctx.font = "bold 44px Arial";
+        ctx.fillText(participant.name, 500, 310);
+  
+        ctx.fillStyle = "#6b7280";
+        ctx.font = "28px Arial";
+        ctx.fillText(participant.email, 500, 365);
+  
+        const qrImage = new Image();
+  
+        await new Promise<void>((resolve, reject) => {
+          qrImage.onload = () => {
+            ctx.drawImage(qrImage, 250, 440, 500, 500);
+  
+            ctx.fillStyle = "#111827";
+            ctx.font = "bold 30px Arial";
+            ctx.fillText(event.date, 500, 1040);
+  
+            ctx.fillStyle = "#4b5563";
+            ctx.font = "28px Arial";
+            ctx.fillText(event.location, 500, 1100);
+  
+            ctx.fillStyle = "#6b7280";
+            ctx.font = "24px Arial";
+            ctx.fillText(
+              "Giriş sırasında QR kodunuzu okutunuz.",
+              500,
+              1210
+            );
+  
+            resolve();
+          };
+  
+          qrImage.onerror = () => {
+            reject(new Error("QR görseli yüklenemedi."));
+          };
+  
+          qrImage.src = qrDataUrl;
+        });
+  
+        const ticketDataUrl = canvas.toDataURL("image/png");
+  
+        const base64Data = ticketDataUrl.split(",")[1];
+  
+        const safeName = participant.name
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, "-")
+          .replace(/[^a-z0-9ğüşöçı-]/gi, "");
+  
+        zip.file(
+          `${safeName}-bilet.png`,
+          base64Data,
+          { base64: true }
+        );
+      }
+  
+      const zipBlob = await zip.generateAsync({
+        type: "blob",
+      });
+  
+      const url = URL.createObjectURL(zipBlob);
+  
+      const safeEventName = event.title
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9ğüşöçı-]/gi, "");
+  
+      const link = document.createElement("a");
+  
+      link.href = url;
+      link.download = `${safeEventName}-biletleri.zip`;
+  
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+  
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Toplu bilet oluşturulamadı:", error);
+      alert("Biletler ZIP dosyasına dönüştürülürken bir hata oluştu.");
     }
   };
-
+  
   const handleDownloadReport = () => {
     if (!event) {
       return;

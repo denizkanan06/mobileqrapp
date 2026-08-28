@@ -6,13 +6,13 @@ export const events: Event[] = [
     title: "Yazılım Zirvesi",
     date: "10 Ağustos 2026",
     location: "İstanbul",
-    participantCount: 120,
+    participants: [],
   },
   {
     id: 2,
     title: "Girişimcilik Buluşması",
     date: "18 Ağustos 2026",
     location: "Ankara",
-    participantCount: 85,
+    participants: [],
   },
 ];
