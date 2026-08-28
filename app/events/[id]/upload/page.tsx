@@ -165,6 +165,27 @@ export default function EventUploadPage() {
       alert("Bilet oluşturulurken bir hata oluştu.");
     }
   };
+  const handleDownloadAllTickets = async () => {
+    if (!event || participants.length === 0) {
+      return;
+    }
+  
+    const confirmed = window.confirm(
+      `${participants.length} katılımcının tüm biletleri indirilecek. Devam etmek istiyor musun?`
+    );
+  
+    if (!confirmed) {
+      return;
+    }
+  
+    for (const participant of participants) {
+      await handleDownloadTicket(participant);
+  
+      await new Promise((resolve) =>
+        setTimeout(resolve, 400)
+      );
+    }
+  };
 
   const handleDownloadReport = () => {
     if (!event) {
@@ -438,19 +459,29 @@ export default function EventUploadPage() {
     </p>
   </div>
 </div>
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-xl font-semibold">
-              Katılımcılar ({participants.length})
-            </h2>
+<div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+  <h2 className="text-xl font-semibold">
+    Katılımcılar ({participants.length})
+  </h2>
 
-            <button
-              type="button"
-              onClick={handleDownloadReport}
-              className="rounded-lg bg-emerald-600 px-4 py-2 font-semibold text-white hover:bg-emerald-700"
-            >
-              Katılım Raporunu İndir
-            </button>
-          </div>
+  <div className="flex flex-wrap gap-3">
+    <button
+      type="button"
+      onClick={handleDownloadAllTickets}
+      className="rounded-lg bg-purple-600 px-4 py-2 font-semibold text-white hover:bg-purple-700"
+    >
+      Tüm Biletleri İndir
+    </button>
+
+    <button
+      type="button"
+      onClick={handleDownloadReport}
+      className="rounded-lg bg-emerald-600 px-4 py-2 font-semibold text-white hover:bg-emerald-700"
+    >
+      Katılım Raporunu İndir
+    </button>
+  </div>
+</div>
 
           <input
             type="text"
