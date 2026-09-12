@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# .env dosyasından URL'i alıyoruz, yoksa varsayılanı kullanıyoruz
+
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/event_db")
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
