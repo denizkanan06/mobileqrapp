@@ -4,7 +4,7 @@ from app.database import engine, Base
 # Import models so SQLAlchemy can recognize and create the tables
 from app.models import models
 # Import the events router
-from app.routers import events
+from app.routers import events ,participants ,checkins
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -13,6 +13,8 @@ app = FastAPI(title="Start-Hub Event API", version="1.0.0")
 
 # Include the event router in the main application
 app.include_router(events.router) 
+app.include_router(participants.router)
+app.include_router(checkins.router)
 
 @app.get("/")
 def read_root():
